@@ -83,7 +83,9 @@ class AnnotationFactory {
           case 'Btn':
             return new ButtonWidgetAnnotation(parameters);
           case 'Ch':
-            return new ChoiceWidgetAnnotation(parameters);
+            return new ChoiceWidgetAnnotation(parameters);s
+          case "Sig":
+              return new SignatureWidgetAnnotation(parameters);
         }
         warn('Unimplemented widget field type "' + fieldType + '", ' +
              'falling back to base field type.');
@@ -619,14 +621,6 @@ class WidgetAnnotation extends Annotation {
     }
 
     data.readOnly = this.hasFieldFlag(AnnotationFieldFlag.READONLY);
-
-    // Hide signatures because we cannot validate them, and unset the fieldValue
-    // since it's (most likely) a `Dict` which is non-serializable and will thus
-    // cause errors when sending annotations to the main-thread (issue 10347).
-    if (data.fieldType === 'Sig') {
-      data.fieldValue = null;
-      this.setFlags(AnnotationFlag.HIDDEN);
-    }
   }
 
   /**
@@ -692,7 +686,7 @@ class WidgetAnnotation extends Annotation {
   getOperatorList(evaluator, task, renderForms) {
     // Do not render form elements on the canvas when interactive forms are
     // enabled. The display layer is responsible for rendering them instead.
-    if (renderForms) {
+    if (renderForms && !(this instanceof SignatureWidgetAnnotation)) {
       return Promise.resolve(new OperatorList());
     }
     return super.getOperatorList(evaluator, task, renderForms);
@@ -887,6 +881,25 @@ class ChoiceWidgetAnnotation extends WidgetAnnotation {
     // Process field flags for the display layer.
     this.data.combo = this.hasFieldFlag(AnnotationFieldFlag.COMBO);
     this.data.multiSelect = this.hasFieldFlag(AnnotationFieldFlag.MULTISELECT);
+  }
+}
+
+class SignatureWidgetAnnotation extends WidgetAnnotation {
+  constructor(params) {
+    super(params);
+
+    // Unset the fieldValue since it's (most likely) a `Dict` which is
+    // non-serializable and will thus cause errors when sending annotations
+    // to the main-thread (issue 10347).
+    this.data.fieldValue = null;
+  }
+
+  getFieldObject() {
+    return {
+      id: this.data.id,
+      value: null,
+      type: "signature",
+    };
   }
 }
 

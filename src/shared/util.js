@@ -269,6 +269,7 @@ const UNSUPPORTED_FEATURES = {
   unknown: 'unknown',
   forms: 'forms',
   javaScript: 'javaScript',
+  signatures: "signatures",
   smask: 'smask',
   shadingPattern: 'shadingPattern',
   font: 'font',
